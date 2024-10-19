@@ -6,7 +6,7 @@ class Arguments:
         self.steps = 200
 
         self.n_qubits = 4
-        self.m = 1      # input m-copies of each state
+        self.m = 2      # input m-copies of each state
 
         self.num_data0 = 300
         self.num_data1 = 300
