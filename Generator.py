@@ -91,7 +91,7 @@ def generate_data(num_samples, label):
         else:
             depth = label
             state = DL_HWE_qnn(params, depth)
-        # Duplicate teh state to create m copies
+        # Duplicate the state to create m copies
         if args.m == 2:
             state = np.kron(state, state)
         data.append(state)
