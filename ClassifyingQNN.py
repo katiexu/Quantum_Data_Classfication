@@ -66,10 +66,10 @@ class HybridNet(nn.Module):
 
 model = HybridNet()
 loss_fn = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
 # Define loss function and training function
 
-qcnn_params = pnp.array(np.random.rand(2 * args.n_qubits), requires_grad=True)
+qcnn_params = pnp.array(np.random.rand(2 * args.n_qubits * m), requires_grad=True)
 for epoch in range(args.steps):
     outputs = model(X_train)
     loss = loss_fn(outputs, y_train.float())

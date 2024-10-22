@@ -16,20 +16,35 @@ torch.manual_seed(args.seed)
 dev = qml.device("default.qubit", wires=args.n_qubits)
 
 @qml.qnode(dev)
-def qnn(params, depth):
-    # Generate random parameters for the initializing U3 gates
+def HWE_qnn(params, depth):
+    # Parameters of the first column of U3 gates are sampled from a uniform distribution [-1, 1]
     params_initialize = 2 * np.random.rand(args.n_qubits, 3) - 1
-    for d1 in range(args.n_qubits):
-        qml.U3(params_initialize[d1][0], params_initialize[d1][1], params_initialize[d1][2], wires=d1)
-    for d2 in range(depth):
+    for i in range(args.n_qubits):
+        qml.U3(params_initialize[i][0], params_initialize[i][1], params_initialize[i][2], wires=i)
+    for d in range(depth):
         for i1 in range(args.n_qubits):
-            qml.U3(params[d2][i1][0], params[d2][i1][1], params[d2][i1][2], wires=i1)
+            qml.U3(params[d][i1][0], params[d][i1][1], params[d][i1][2], wires=i1)
         for i2 in range(math.floor(args.n_qubits / 2)):
-            qml.CNOT(wires=[2 * i2, 2 * i2 + 1])
+            qml.CZ(wires=[2 * i2, 2 * i2 + 1])
         for i3 in range(args.n_qubits):
-            qml.U3(params[d2][i3][0], params[d2][i3][1], params[d2][i3][2], wires=i3)
+            qml.U3(params[d][i3][0], params[d][i3][1], params[d][i3][2], wires=i3)
         for i4 in range(math.floor((args.n_qubits - 1) / 2)):
-            qml.CNOT(wires=[2 * i4 + 1, 2 * i4 + 2])
+            qml.CZ(wires=[2 * i4 + 1, 2 * i4 + 2])
+    return qml.state()
+
+@qml.qnode(dev)
+def DL_HWE_qnn(params, depth):
+    # Parameters of the first column of U3 gates are sampled from a uniform distribution [-1, 1]
+    params_initialize = 2 * np.random.rand(args.n_qubits, 3) - 1
+    for i in range(args.n_qubits):
+        qml.U3(params_initialize[i][0], params_initialize[i][1], params_initialize[i][2], wires=i)
+    for d in range(depth):
+        for i1 in range(math.floor(args.n_qubits / 2)):
+            qml.CNOT(wires=[2 * i1, 2 * i1 + 1])
+        for i2 in range(math.floor((args.n_qubits - 1) / 2)):
+            qml.CNOT(wires=[2 * i2 + 1, 2 * i2 + 2])
+        for i3 in range(args.n_qubits):
+            qml.U3(params[d][i3][0], params[d][i3][1], params[d][i3][2], wires=i3)
     return qml.state()
 
 
@@ -61,21 +76,26 @@ def concentratable_entanglement(state, n_qubits):
 
 
 # Generate data
-def generate_data(num_samples, depth):
+def generate_data(num_samples, label):
     data = []
     labels = []
     # params = 2 * math.pi * np.random.rand(depth, args.n_qubits, 3)
-    if depth == args.label0:
+    if label == args.label0:
         params = args.params0
     else:
         params = args.params1
     for _ in range(num_samples):
-        state = qnn(params, depth)
+        if args.task == 'Entangled State Classification':
+            depth = args.depth
+            state = HWE_qnn(params, depth)
+        else:
+            depth = label
+            state = DL_HWE_qnn(params, depth)
         # Duplicate teh state to create m copies
         if args.m == 2:
             state = np.kron(state, state)
         data.append(state)
-        labels.append(depth)
+        labels.append(label)
     return data, labels
 
 
@@ -106,10 +126,10 @@ torch.save(y_test, 'data/y_test.pt')
 # # Calculate CE value
 # ce = concentratable_entanglement(output_state, args.n_qubits)
 # print(f"Concentratable Entanglement (CE): {ce:.4f}")
-#
-# # Draw the QNN circuit
-# drawer = qml.draw(qnn)
-# print(drawer(params))
-# drawer = qml.draw_mpl(qnn)
-# drawer(params)
+
+# # Draw the circuit
+# depth = 1
+# params = np.random.random((depth, args.n_qubits, 3))
+# fig = qml.draw_mpl(HWE_qnn)(params, depth)
+# # fig = qml.draw_mpl(DL_HWE_qnn)(params, depth)
 # plt.show()
