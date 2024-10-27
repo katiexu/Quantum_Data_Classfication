@@ -2,11 +2,17 @@
 
 ## Requirements
 python==3.9
+
 pennylane==0.34.0
+
 torch==2.1.2
+
 qiskit==0.38.0
+
 torchquantum==0.1.7
+
 scikit-learn
+
 opt_einsum
 
 ## Run Code
