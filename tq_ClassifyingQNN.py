@@ -27,6 +27,7 @@ class QuantumCircuit(tq.QuantumModule):
         self.rxs = [tq.RX(has_params=True, trainable=True) for i in range(self.n_qubits)]
         self.rys = [tq.RY(has_params=True, trainable=True) for i in range(self.n_qubits)]
         self.cnots = [tq.CNOT() for _ in range(self.n_qubits // 2)]
+        self.hadamards = [tq.Hadamard() for _ in range(self.n_qubits // 2)]
         self.measure = tq.MeasureAll(tq.PauliZ)
 
 
@@ -42,7 +43,7 @@ class QuantumCircuit(tq.QuantumModule):
         # Apply CNOT and Hadamard as convolution and pooling
         for i in range(self.n_qubits // 2):
             self.cnots[i](self.q_device, wires=[2 * i, 2 * i + 1])
-            tqf.hadamard(self.q_device, wires=[2 * i])
+            self.hadamards[i](self.q_device, wires=[2 * i])
 
         return self.measure(self.q_device)
 
